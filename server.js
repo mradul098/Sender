@@ -114,6 +114,61 @@ app.get('/file/:uuid', (req, res) => {
 });
 
 
+// File listing endpoint with clickable links
+app.get('/deletelist', (req, res) => {
+  fs.readdir('uploads', (err, files) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    // Create an array of file objects with clickable links
+    const fileList = files.map((file) => ({
+      filename: file,
+      link: `/delete/${file.slice(0,-4)}`,
+    }));
+
+    res.json({ files: fileList });
+  });
+});
+
+
+// File deletion by UUID endpoint
+app.delete('/delete/:uuid', (req, res) => {
+  const uuid = req.params.uuid;
+  const filePath = path.join('uploads', uuid);
+
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.send('File deleted successfully');
+  });
+});
+
+// Delete all files endpoint
+app.delete('/deleteall', (req, res) => {
+  const directory = 'uploads';
+
+  fs.readdir(directory, (err, files) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    files.forEach((file) => {
+      const filePath = path.join(directory, file);
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error(`Error deleting file: ${filePath}`);
+        }
+      });
+    });
+
+    res.send('All files deleted successfully');
+  });
+});
+
+
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
